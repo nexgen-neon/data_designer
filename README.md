@@ -1,193 +1,862 @@
-# 🎨 NeMo Data Designer
+# NVIDIA DataDesigner — Synthetic Data Generation
 
-[![CI](https://github.com/NVIDIA-NeMo/DataDesigner/actions/workflows/ci.yml/badge.svg)](https://github.com/NVIDIA-NeMo/DataDesigner/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python 3.10 - 3.14](https://img.shields.io/badge/🐍_Python-3.10_|_3.11_|_3.12_|_3.13_|_3.14-blue.svg)](https://www.python.org/downloads/) [![NeMo Platform](https://img.shields.io/badge/NeMo-Platform-76b900)](https://docs.nvidia.com/nemo-platform/documentation/design-synthetic-data) [![Code](https://img.shields.io/badge/Code-Documentation-8A2BE2.svg)](https://docs.nvidia.com/nemo/datadesigner/) ![Tokens](https://img.shields.io/badge/20T+-Tokens_Processed-76b900.svg?logo=nvidia&logoColor=white)
+This project demonstrates how to use **NVIDIA DataDesigner** to generate synthetic datasets using Large Language Models (LLMs).
 
-**Generate high-quality synthetic datasets from scratch or using your own seed data.**
+The current example generates **10 short horror stories** using NVIDIA's **Nemotron 3.5 Lightning** model through the NVIDIA API and exports the generated dataset as a CSV file.
 
 ---
 
-## Welcome!
+## Overview
 
-Data Designer helps you create synthetic datasets that go beyond simple LLM prompting. Whether you need diverse statistical distributions, meaningful correlations between fields, or validated high-quality outputs, Data Designer provides a flexible framework for building production-grade synthetic data.
+The project uses the following workflow:
 
-## What can you do with Data Designer?
-
-- **Generate diverse text, structured data, and images** using samplers, LLMs, image models, or existing seed datasets
-- **Build multimodal workflows** with image, audio, and video context
-- **Connect generation to external tools** through local or remote MCP servers and capture interaction traces
-- **Control relationships** between fields with dependency-aware generation
-- **Validate and score outputs** with Python, SQL, custom validators, and LLM judges
-- **Extend Data Designer** with plugins for custom columns, seed readers, and processors
-- **Preview, resume, and monitor generation** from small experiments to large runs
-
----
-
-## Quick Start
-
-### 1. Install
-
-```bash
-pip install data-designer
+```text
+Python Configuration
+        ↓
+NVIDIA DataDesigner
+        ↓
+NVIDIA API
+        ↓
+Nemotron 3.5 Lightning
+        ↓
+Generated Synthetic Data
+        ↓
+Dataset Profiling
+        ↓
+CSV Export
 ```
 
-> [!NOTE]
-> This project will download and install additional third-party open source
-> software projects. Review the license terms of these open source projects
-> before use.
+DataDesigner is responsible for building and executing the dataset-generation pipeline, while NVIDIA provides the hosted LLM used to generate the text.
 
-Or install from source:
+---
 
-```bash
-git clone https://github.com/NVIDIA-NeMo/DataDesigner.git
+## Technologies Used
+
+* Python 3.14+
+* uv
+* NVIDIA DataDesigner
+* NVIDIA API
+* NVIDIA Nemotron 3.5 Lightning
+* Jinja templating
+* CSV
+
+---
+
+## Project Setup
+
+### 1. Clone the Repository
+
+Clone the project repository:
+
+```powershell
+git clone <YOUR_REPOSITORY_URL>
 cd DataDesigner
-make install
 ```
 
-### 2. Set your API key
+If the repository is already available locally, simply navigate into the project directory:
 
-Start with one of our default model providers:
-
-- [NVIDIA Build API](https://build.nvidia.com)
-- [OpenAI](https://platform.openai.com/api-keys)
-- [OpenRouter](https://openrouter.ai)
-
-Grab your API key(s) using the above links and set one or more of the following environment variables:
-```bash
-export NVIDIA_API_KEY="your-api-key-here"
-
-export OPENAI_API_KEY="your-openai-api-key-here"
-
-export OPENROUTER_API_KEY="your-openrouter-api-key-here"
-```
-
-### 3. Start generating data!
-```python
-import data_designer.config as dd
-from data_designer.interface import DataDesigner
-
-# Initialize with default settings
-data_designer = DataDesigner()
-config_builder = dd.DataDesignerConfigBuilder()
-
-# Add a product category
-config_builder.add_column(
-    dd.SamplerColumnConfig(
-        name="product_category",
-        sampler_type=dd.SamplerType.CATEGORY,
-        params=dd.CategorySamplerParams(
-            values=["Electronics", "Clothing", "Home & Kitchen", "Books"],
-        ),
-    )
-)
-
-# Generate personalized customer reviews
-config_builder.add_column(
-    dd.LLMTextColumnConfig(
-        name="review",
-        model_alias="nvidia-text",
-        prompt="Write a brief product review for a {{ product_category }} item you recently purchased.",
-    )
-)
-
-# Preview your dataset
-preview = data_designer.preview(config_builder=config_builder)
-preview.display_sample_record()
+```powershell
+cd C:\Users\kaush\DataDesigner
 ```
 
 ---
 
-## What's next?
+## 2. Install Dependencies
 
-### 📚 Learn more
+This project uses **uv** for Python environment and dependency management.
 
-- **[Getting Started](https://docs.nvidia.com/nemo/datadesigner/getting-started/welcome)** – Install, configure, and generate your first dataset
-- **[Tutorial Notebooks](https://docs.nvidia.com/nemo/datadesigner/tutorials/overview)** – Step-by-step interactive tutorials
-- **[Column Types](https://docs.nvidia.com/nemo/datadesigner/concepts/columns)** – Explore samplers, LLM columns, validators, and more
-- **[Validators](https://docs.nvidia.com/nemo/datadesigner/concepts/validators)** – Learn how to validate generated data with Python, SQL, and remote validators
-- **[Model Configuration](https://docs.nvidia.com/nemo/datadesigner/concepts/models/model-configs)** – Configure custom models and providers
-- **[Person Sampling](https://docs.nvidia.com/nemo/datadesigner/concepts/person-sampling)** – Learn how to sample realistic person data with demographic attributes
+Make sure `uv` is installed:
 
-### 📝 Documentation
-
-Data Designer documentation is available at [docs.nvidia.com/nemo/datadesigner](https://docs.nvidia.com/nemo/datadesigner/).
-
-Contributors should edit docs prose under `fern/`. Tutorial notebook source remains in `docs/notebook_source/*.py`; generated notebooks and Fern artifacts are not the source of truth. The legacy MkDocs archive remains available on GitHub Pages for releases `0.5.7` and older.
-
-### 🔧 Configure models via CLI
-
-```bash
-data-designer config providers # Configure model providers
-data-designer config models    # Set up your model configurations
-data-designer config list      # View current settings
+```powershell
+uv --version
 ```
 
-### 🤖 Agent Skill
+Then install all project dependencies:
 
-Data Designer has a [skill](https://docs.nvidia.com/nemo/datadesigner/dev-notes/data-designer-got-skills) for coding agents. Just describe the dataset you want, and your agent handles schema design, validation, and generation. The skill is tested with [Claude Code](https://code.claude.com) and [Codex](https://chatgpt.com/codex).
-
-**Install via [skills.sh](https://skills.sh):**
-
-```bash
-npx skills add NVIDIA-NeMo/DataDesigner
+```powershell
+uv sync --all-packages
 ```
 
-After installation, invoke the `data-designer` skill or describe the dataset you want and the skill will kick in.
+This creates/uses the project's virtual environment and installs the required dependencies.
 
-### 🤝 Get involved
+Activate the environment if required:
 
-This repository supports agent-assisted development — see [CONTRIBUTING.md](CONTRIBUTING.md) for the recommended workflow.
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-- **[Contributing Guide](CONTRIBUTING.md)** – How to contribute, including agent-assisted workflows
-- **[GitHub Issues](https://github.com/NVIDIA-NeMo/DataDesigner/issues)** – Report bugs or make a feature request
+You should see a prompt similar to:
 
----
-
-## Telemetry
-
-Data Designer collects telemetry to help us improve the library for developers. This data is not used to track any individual user behavior. It is used to see an aggregation of which models are the most popular for SDG. We will share this usage data with the community.
-
-Disable with `NEMO_TELEMETRY_ENABLED=false`. **[More details →](#telemetry-and-privacy)**
-
-### Top models (YTD)
-
-Aggregate model usage across synthetic data generation jobs, year-to-date 1/1/2026–8/4/2026:
-
-![Top models used for synthetic data generation](fern/images/top-models.png)
-
-_Last updated on August 4, 2026_
+```text
+(data-designer-workspace) PS C:\Users\...\DataDesigner>
+```
 
 ---
 
-## License
+# NVIDIA API Setup
 
-Apache License 2.0 – see [LICENSE](LICENSE) for details.
+DataDesigner needs access to an LLM provider in order to generate text.
+
+In this project, **NVIDIA is the provider** and the **NVIDIA API is the interface used to communicate with the hosted model**.
+
+The project uses:
+
+```text
+Provider:
+NVIDIA
+
+API endpoint:
+https://integrate.api.nvidia.com/v1
+
+Model:
+nvidia/nemotron-3.5-lightning-30b-a3b
+```
+
+The API uses an API key for authentication.
 
 ---
 
-## Citation
+## 3. Get an NVIDIA API Key
 
-If you use NeMo Data Designer in your research, please cite it using the following BibTeX entry:
+Create an NVIDIA API key through NVIDIA's API Catalog / Build platform.
 
-```bibtex
-@misc{nemo-data-designer,
-  author = {The NeMo Data Designer Team, NVIDIA},
-  title = {NeMo Data Designer: A framework for generating synthetic data from scratch or based on your own seed data},
-  howpublished = {\url{https://github.com/NVIDIA-NeMo/DataDesigner}},
-  year = {2025},
-  note = {GitHub Repository},
+Do **not** put the API key directly inside the Python source code.
+
+Do not commit the key to Git.
+
+---
+
+## 4. Configure the API Key
+
+DataDesigner expects the environment variable:
+
+```text
+NVIDIA_API_KEY
+```
+
+For PowerShell, configure it for the current terminal session:
+
+```powershell
+$env:NVIDIA_API_KEY = "YOUR_NVIDIA_API_KEY"
+```
+
+You can verify that the variable exists without printing the actual secret:
+
+```powershell
+if ($env:NVIDIA_API_KEY) {
+    Write-Host "NVIDIA_API_KEY is configured"
+} else {
+    Write-Host "NVIDIA_API_KEY is NOT configured"
 }
 ```
 
+Expected output:
+
+```text
+NVIDIA_API_KEY is configured
+```
+
+### Security
+
+Never do this:
+
+```powershell
+Write-Host $env:NVIDIA_API_KEY
+```
+
+Never commit the API key to GitHub.
+
+Never put the API key directly into:
+
+```python
+api_key = "..."
+```
+
+Use the environment variable instead.
+
 ---
 
-<a id="telemetry-and-privacy"></a>
+# DataDesigner Provider Configuration
 
-## Telemetry & privacy
+DataDesigner uses a provider configuration similar to:
 
-NeMo Data Designer includes an optional function to share anonymous telemetry data with NVIDIA for product improvement. Data collected is limited to names of models used and token counts (input and output). No user or device information is collected. This data is used to prioritize product improvements and will be shared in aggregate with the community. It is not used to track any individual user behavior.
+```yaml
+providers:
+  - name: nvidia
+    endpoint: https://integrate.api.nvidia.com/v1
+    provider_type: openai
+    api_key: NVIDIA_API_KEY
+```
 
-You may opt out of telemetry collection at any time. Opting out applies only to data collection by the NeMo Data Designer library itself.
+### Why is `provider_type` set to `openai`?
 
-**Use of third-party endpoints, including NVIDIA Build:** NeMo Data Designer can be configured to use various inference endpoints, including [build.nvidia.com](https://build.nvidia.com) (NVIDIA Build). If you choose to use NVIDIA Build or any other third-party endpoint, that endpoint's own terms of service and privacy practices apply independently of this library. Any opt-out you exercise within NeMo Data Designer does not extend to data collection by your chosen endpoint. NVIDIA Build is intended for evaluation and testing purposes only and may not be used in production environments. Do not submit any confidential information or personal data when using NVIDIA Build.
+NVIDIA provides an **OpenAI-compatible API interface**.
+
+This does **not** mean that the model is provided by OpenAI.
+
+The configuration means that DataDesigner can communicate with NVIDIA's endpoint using the OpenAI-compatible API format.
+
+The relationship is:
+
+```text
+Provider
+    ↓
+NVIDIA
+
+API endpoint
+    ↓
+https://integrate.api.nvidia.com/v1
+
+API key
+    ↓
+NVIDIA_API_KEY
+
+Model
+    ↓
+nvidia/nemotron-3.5-lightning-30b-a3b
+```
+
+---
+
+# Verify the DataDesigner Configuration
+
+You can inspect the configured providers with:
+
+```powershell
+uv run data-designer config providers
+```
+
+The NVIDIA provider should be present.
+
+---
+
+# Test Configuration
+
+The project uses a Python configuration file:
+
+```text
+test_config.py
+```
+
+The configuration exposes a function called:
+
+```python
+load_config_builder()
+```
+
+This allows the DataDesigner CLI to load the configuration.
+
+---
+
+# Horror Story Dataset
+
+The current configuration generates a single column:
+
+```text
+story
+```
+
+The column is generated using an LLM.
+
+Example configuration:
+
+```python
+import data_designer.config as dd
+
+
+def load_config_builder() -> dd.DataDesignerConfigBuilder:
+    config_builder = dd.DataDesignerConfigBuilder()
+
+    config_builder.add_column(
+        dd.LLMTextColumnConfig(
+            name="story",
+            model_alias="nvidia-text",
+            prompt=(
+                "Generate one original short horror story. "
+                "The story must be between 100 and 150 words. "
+                "Build suspense and end with an unsettling twist. "
+                "Output ONLY the story itself. "
+                "Do NOT explain your reasoning. "
+                "Do NOT analyze the request. "
+                "Do NOT include a plan, outline, word count, commentary, "
+                "or phrases such as 'Let's think step by step'. "
+                "Do NOT include a title. "
+                "Start directly with the first sentence of the story "
+                "and end with the final sentence of the story."
+            ),
+        )
+    )
+
+    return config_builder
+```
+
+---
+
+# Understanding the Configuration
+
+## `DataDesignerConfigBuilder`
+
+```python
+config_builder = dd.DataDesignerConfigBuilder()
+```
+
+This creates the configuration builder used to define the dataset.
+
+Columns are then added to this builder.
+
+---
+
+## `LLMTextColumnConfig`
+
+```python
+dd.LLMTextColumnConfig(...)
+```
+
+This tells DataDesigner that the column should be generated using an LLM.
+
+In this example:
+
+```python
+name="story"
+```
+
+creates the dataset column:
+
+```text
+story
+```
+
+---
+
+## Model Alias
+
+The configuration uses:
+
+```python
+model_alias="nvidia-text"
+```
+
+The alias points to the configured NVIDIA model.
+
+Conceptually:
+
+```text
+nvidia-text
+      ↓
+NVIDIA provider
+      ↓
+Nemotron 3.5 Lightning
+```
+
+Using an alias makes it possible to reference the configured model without repeatedly specifying the complete model configuration.
+
+---
+
+# Validate the Configuration
+
+Before generating data, validate the configuration:
+
+```powershell
+uv run data-designer validate test_config.py
+```
+
+Expected result:
+
+```text
+✅ Validation passed
+```
+
+Validation checks that the DataDesigner configuration is valid before the generation pipeline is executed.
+
+---
+
+# Check Model Connectivity
+
+You can also verify that the configured model and provider are reachable:
+
+```powershell
+uv run data-designer check-models test_config.py
+```
+
+A successful result looks similar to:
+
+```text
+🩺 Running health checks for models...
+
+Checking 'nvidia/nemotron-3.5-lightning-30b-a3b'
+in provider named 'nvidia'
+
+✅ Passed!
+
+✅ All models and tools responded successfully
+```
+
+This confirms that:
+
+* the provider configuration is available
+* the API key is being recognized
+* the model can be reached
+* the model can successfully respond to a generation request
+
+---
+
+# Generate the Dataset
+
+Generate 10 horror stories with:
+
+```powershell
+uv run data-designer create test_config.py `
+    --num-records 10 `
+    --dataset-name horror_stories `
+    --output-format csv
+```
+
+Or as a single line:
+
+```powershell
+uv run data-designer create test_config.py --num-records 10 --dataset-name horror_stories --output-format csv
+```
+
+---
+
+# Generated Dataset
+
+DataDesigner creates the dataset under:
+
+```text
+artifacts/
+└── horror_stories/
+    └── horror_stories.csv
+```
+
+The CSV contains:
+
+```text
+story
+```
+
+with 10 generated records.
+
+---
+
+# What Happens During Generation?
+
+When the `create` command is executed, DataDesigner performs several stages.
+
+### 1. Load Configuration
+
+```text
+test_config.py
+        ↓
+load_config_builder()
+```
+
+### 2. Validate Configuration
+
+```text
+Configuration
+      ↓
+Validation
+```
+
+### 3. Resolve Model
+
+```text
+nvidia-text
+      ↓
+NVIDIA provider
+      ↓
+Nemotron model
+```
+
+### 4. Check Model Health
+
+DataDesigner sends a small request to verify that the model responds successfully.
+
+### 5. Generate Records
+
+For 10 records:
+
+```text
+Record 1 → LLM
+Record 2 → LLM
+Record 3 → LLM
+...
+Record 10 → LLM
+```
+
+### 6. Profile Dataset
+
+DataDesigner calculates dataset statistics such as:
+
+* number of records
+* number of columns
+* unique values
+* token statistics
+* completion statistics
+
+### 7. Export Dataset
+
+The generated data is finally written to:
+
+```text
+horror_stories.csv
+```
+
+---
+
+# API Request Flow
+
+The complete communication can be understood as:
+
+```text
+Your Python configuration
+          ↓
+     DataDesigner
+          ↓
+     NVIDIA API
+          ↓
+    Nemotron Model
+          ↓
+   Generated response
+          ↓
+     DataDesigner
+          ↓
+       CSV file
+```
+
+The API key is used for authentication.
+
+The model performs the actual text generation.
+
+DataDesigner manages the dataset-generation workflow.
+
+---
+
+# Provider vs API
+
+These terms are easy to confuse.
+
+### Provider
+
+The provider is the service that gives access to the model.
+
+In this project:
+
+```text
+Provider = NVIDIA
+```
+
+### API
+
+The API is the interface through which the application communicates with that provider.
+
+In this project:
+
+```text
+API = NVIDIA's OpenAI-compatible API
+```
+
+### Model
+
+The model is the actual AI system generating the text.
+
+```text
+Model = Nemotron 3.5 Lightning
+```
+
+So:
+
+```text
+NVIDIA
+  ↓
+Provider
+
+NVIDIA API
+  ↓
+Communication interface
+
+Nemotron
+  ↓
+LLM generating the text
+```
+
+---
+
+# Using This Project on Another Machine
+
+Someone else who wants to use this project should:
+
+### 1. Clone the repository
+
+```powershell
+git clone <YOUR_REPOSITORY_URL>
+cd DataDesigner
+```
+
+### 2. Install uv
+
+Verify:
+
+```powershell
+uv --version
+```
+
+### 3. Install project dependencies
+
+```powershell
+uv sync --all-packages
+```
+
+### 4. Obtain their own NVIDIA API key
+
+Each user should use their **own API key**.
+
+The project owner should never distribute their private API key.
+
+### 5. Configure the environment variable
+
+```powershell
+$env:NVIDIA_API_KEY = "THEIR_NVIDIA_API_KEY"
+```
+
+### 6. Verify the key exists
+
+```powershell
+if ($env:NVIDIA_API_KEY) {
+    Write-Host "NVIDIA_API_KEY is configured"
+} else {
+    Write-Host "NVIDIA_API_KEY is NOT configured"
+}
+```
+
+### 7. Validate the configuration
+
+```powershell
+uv run data-designer validate test_config.py
+```
+
+### 8. Check model connectivity
+
+```powershell
+uv run data-designer check-models test_config.py
+```
+
+### 9. Generate the dataset
+
+```powershell
+uv run data-designer create test_config.py --num-records 10 --dataset-name horror_stories --output-format csv
+```
+
+The generated CSV will appear under:
+
+```text
+artifacts/horror_stories/horror_stories.csv
+```
+
+---
+
+# Changing the Number of Stories
+
+The number of records is controlled from the command line.
+
+For 100 stories:
+
+```powershell
+uv run data-designer create test_config.py --num-records 100 --dataset-name horror_stories --output-format csv
+```
+
+For 1,000 stories:
+
+```powershell
+uv run data-designer create test_config.py --num-records 1000 --dataset-name horror_stories --output-format csv
+```
+
+The configuration does not need to be changed just to change the number of records.
+
+---
+
+# Changing the Output Format
+
+DataDesigner supports different output formats.
+
+### CSV
+
+```powershell
+--output-format csv
+```
+
+### JSONL
+
+```powershell
+--output-format jsonl
+```
+
+### Parquet
+
+```powershell
+--output-format parquet
+```
+
+For example:
+
+```powershell
+uv run data-designer create test_config.py --num-records 100 --dataset-name horror_stories --output-format parquet
+```
+
+---
+
+# Customizing the Stories
+
+The prompt in `test_config.py` controls the type of content generated.
+
+For example, the prompt can be changed to request:
+
+```text
+Psychological horror
+Supernatural horror
+Ghost stories
+Cosmic horror
+Horror mystery
+Horror set in an abandoned hospital
+Horror set in a forest
+Horror involving an AI system
+```
+
+For example:
+
+```python
+prompt=(
+    "Generate one original short psychological horror story. "
+    "Keep it between 100 and 150 words. "
+    "Build suspense and end with an unsettling twist. "
+    "Output only the story."
+)
+```
+
+The configuration can therefore be reused to create many different synthetic text datasets.
+
+---
+
+# Important Considerations
+
+## API Costs / Usage
+
+Generating data through a hosted LLM API consumes model/API usage.
+
+Larger datasets require more model requests and tokens.
+
+For example:
+
+```text
+10 stories
+    ↓
+10 generation requests
+
+1,000 stories
+    ↓
+approximately 1,000 generation tasks
+```
+
+Actual usage depends on the model configuration and generated content.
+
+---
+
+## Generated Data Should Be Reviewed
+
+LLM-generated synthetic data can contain:
+
+* repetitive patterns
+* unexpected formatting
+* irrelevant content
+* factual errors
+* malformed responses
+* outputs that don't follow the prompt exactly
+
+Therefore, generated datasets should be inspected and validated before being used in production or downstream ML pipelines.
+
+---
+
+## Never Commit API Keys
+
+Make sure secrets are excluded from version control.
+
+For example, `.env` files containing credentials should not be committed.
+
+A project should contain configuration such as:
+
+```text
+NVIDIA_API_KEY
+```
+
+but never the actual secret value.
+
+---
+
+# Future Improvements
+
+This project can be extended to generate richer synthetic datasets.
+
+For example:
+
+```text
+story_id
+title
+genre
+setting
+character
+story
+ending_type
+```
+
+A more advanced pipeline could look like:
+
+```text
+genre
+  ↓
+setting
+  ↓
+character
+  ↓
+story
+  ↓
+ending
+```
+
+DataDesigner can use relationships between generated columns, allowing later columns to reference values generated earlier in the dataset.
+
+This makes it possible to construct more structured and realistic synthetic datasets instead of generating isolated pieces of text.
+
+---
+
+# Summary
+
+This project demonstrates a basic **LLM-powered synthetic data generation workflow using NVIDIA DataDesigner**.
+
+The main components are:
+
+```text
+uv
+ ↓
+Python
+ ↓
+DataDesigner
+ ↓
+NVIDIA API
+ ↓
+Nemotron
+ ↓
+Synthetic Dataset
+ ↓
+CSV
+```
+
+The current example generates:
+
+```text
+10 short horror stories
+```
+
+using an NVIDIA-hosted Nemotron model.
+
+The project can be reused by other developers by cloning the repository, installing dependencies with `uv`, configuring their own `NVIDIA_API_KEY`, validating the DataDesigner configuration, checking model connectivity, and running the dataset-generation command.
